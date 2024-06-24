@@ -89,7 +89,7 @@ jobs:
       - name: get-cme-ilink
         if: ${{ matrix.repo == 'private' }}
         run: |
-          sudo apt install sshpass
+          sudo apt-get -y install sshpass
           sshpass -p "$CME_PASSWORD" scp cmeconfig@sftpng.cmegroup.com:/MSGW/Production/Templates/ilinkbinary_v7.xml artio-ilink3-codecs/src/main/resources/uk/co/real_logic/artio/ilink/ilinkbinary.xml
         env:
           CME_PASSWORD: ${{ secrets.CME_PASSWORD }}
