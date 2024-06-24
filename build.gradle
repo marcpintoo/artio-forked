@@ -944,6 +944,7 @@ subprojects {
             maven {
                 name = 'oss'
                 url = 'http://localhost:8081/artifactory/test-maven-repo/'
+                allowInsecureProtocol = true
                 credentials {
                     username = 'admin'
                     password = 'password'
@@ -952,6 +953,7 @@ subprojects {
             maven {
                 name = 'private'
                 url = 'http://localhost:8081/artifactory/test-private-maven-repo/'
+                allowInsecureProtocol = true
                 credentials {
                     username = 'admin'
                     password = 'password'
