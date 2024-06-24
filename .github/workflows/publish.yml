@@ -1,0 +1,120 @@
+name: Release
+
+
+on:
+  workflow_dispatch:
+    inputs:
+      patch:
+        description: Is patch? (Will only update tagged version.txt)
+        required: true
+        default: false
+        type: boolean
+      release:
+        description: Is release? (Will update master version.txt)
+        required: true
+        default: false
+        type: boolean
+      tag:
+        description: Release Version (For tagged version.txt)
+        required: true
+        type: string
+      snapshot-tag:
+        description: New Version (For master version.txt)
+        required: true
+        type: string
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GRADLE_OPTS: '-Dorg.gradle.daemon=false -Dorg.gradle.java.installations.auto-detect=false -Dorg.gradle.warning.mode=fail'
+
+jobs:
+  tag-release:
+    permissions:
+      contents: write
+    runs-on: [ self-hosted ]
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Push Tag
+        id: commit-tag
+        if: ${{ inputs.release || inputs.patch }}
+        run: |
+          echo ${{ inputs.tag }} > version.txt
+          git commit -am "${{ inputs.tag }} released."
+          git tag -f ${{ inputs.tag }}
+          git push origin refs/tags/${{ inputs.tag }}
+
+  build-java:
+    permissions:
+      contents: write
+      packages: write
+    needs: tag-release
+    runs-on: [self-hosted]
+    strategy:
+      fail-fast: false
+      matrix:
+        repo: ['public', 'private']
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: update-version
+        if: ${{ inputs.release || inputs.patch }}
+        run: |
+          echo ${{ inputs.tag }} > version.txt
+      - name: Setup BUILD_JAVA_HOME & BUILD_JAVA_VERSION
+        run: |
+          java -Xinternalversion
+          echo "BUILD_JAVA_HOME=${JAVA_HOME}" >> $GITHUB_ENV
+          echo "BUILD_JAVA_VERSION=8" >> $GITHUB_ENV
+      - name: Setup java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '8'
+      - name: Publish with Gradle to Open Source
+        if: ${{ matrix.repo == 'public' }}
+        run: ./gradlew publishAllPublicationsToOssRepository
+        env:
+          USERNAME: ${{ secrets.USERNAME }}
+          PASSWORD: ${{ secrets.PASSWORD }}
+          ORG_GRADLE_PROJECT_signingKey: ${{ secrets.GPG_SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.GPG_SIGNING_PASSWORD }}
+      - name: get-cme-ilink
+        if: ${{ matrix.repo == 'private' }}
+        run: |
+          sudo apt install sshpass
+          sshpass -p "$CME_PASSWORD" scp cmeconfig@sftpng.cmegroup.com:/MSGW/Production/Templates/ilinkbinary_v7.xml artio-ilink3-codecs/src/main/resources/uk/co/real_logic/artio/ilink/ilinkbinary.xml
+        env:
+          CME_PASSWORD: ${{ secrets.CME_PASSWORD }}
+      - name: Publish with Gradle to Private Repo
+        if: ${{ matrix.repo == 'private' }}
+        run: ./gradlew -Dfix.core.iLink3Enabled=true publishAllPublicationsToPrivateRepository
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          ORG_GRADLE_PROJECT_signingKey: ${{ secrets.GPG_SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.GPG_SIGNING_PASSWORD }}
+  update-tags:
+    permissions:
+      contents: write
+    needs: build-java
+    runs-on: [ self-hosted ]
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          ref: master
+      - name: Update master
+        if: ${{ inputs.release }}
+        run: |
+          echo ${{ inputs.snapshot-tag }} > version.txt
+          git status
+          git commit -am "post ${{ inputs.tag }} release bump"
+          git push origin master

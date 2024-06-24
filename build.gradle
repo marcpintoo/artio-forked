@@ -33,7 +33,6 @@ buildscript {
 plugins {
     id 'com.github.johnrengelman.shadow' version '8.1.1' apply false
     id 'net.researchgate.release' version '2.8.1'
-    id 'com.github.ben-manes.versions' version '0.51.0'
 }
 
 def checkstyleVersion = '9.3'
@@ -47,6 +46,7 @@ def byteBuddyVersion = '1.14.16'
 def agronaVersion = '1.21.2'
 def sbeVersion = '1.31.1'
 def aeronVersion = '1.44.1'
+def artioVersion = file('version.txt').text.trim()
 def artioGroup = 'uk.co.real-logic'
 def iLink3Enabled = false
 
@@ -102,30 +102,12 @@ def projectPom = {
 
 ext {
     group = artioGroup
-    isReleaseVersion = !version.endsWith("SNAPSHOT")
+    isReleaseVersion = true
     iLink3Enabled = Boolean.getBoolean("fix.core.iLink3Enabled")
-
-    if (!project.hasProperty('repoUsername')) {
-        repoUsername = ''
-    }
-
-    if (!project.hasProperty('repoPassword')) {
-        repoPassword = ''
-    }
-
-    if (!project.hasProperty('repoUrl')) {
-        repoUrl = ''
-    }
-
-    if (!project.hasProperty('snapshotUrl')) {
-        snapshotUrl = ''
-    }
-}
-
-release {
-    git {
-        requireBranch = ''
-    }
+    repoUrl = 'http://localhost:8081/artifactory/test-maven-repo/'
+    snapshotUrl = 'http://localhost:8081/artifactory/test-maven-repo/'
+    ossrhUsername = 'admin'
+    ossrhPassword = 'password'
 }
 
 allprojects {
@@ -158,7 +140,7 @@ subprojects {
     apply plugin: 'checkstyle'
 
     group = artioGroup
-    version = version
+    version = artioVersion
 
     def toolchainLauncher = javaToolchains.launcherFor {
         languageVersion = JavaLanguageVersion.of(buildJavaVersion)
@@ -364,6 +346,11 @@ project(':artio-codecs') {
     }
 
     signing {
+        def signingKey = findProperty("signingKey")
+        def signingPassword = findProperty("signingPassword")
+        if (signingKey != null) {
+            useInMemoryPgpKeys(signingKey, signingPassword)
+        }
         sign publishing.publications.artioCodecs
     }
 }
@@ -444,6 +431,11 @@ project(':artio-ilink3-codecs') {
     }
 
     signing {
+        def signingKey = findProperty("signingKey")
+        def signingPassword = findProperty("signingPassword")
+        if (signingKey != null) {
+            useInMemoryPgpKeys(signingKey, signingPassword)
+        }
         sign publishing.publications.artioILink3Codecs
     }
 }
@@ -521,6 +513,11 @@ project(':artio-binary-entrypoint-codecs') {
     }
 
     signing {
+        def signingKey = findProperty("signingKey")
+        def signingPassword = findProperty("signingPassword")
+        if (signingKey != null) {
+            useInMemoryPgpKeys(signingKey, signingPassword)
+        }
         sign publishing.publications.artioBinaryEntrypointCodecs
     }
 }
@@ -544,6 +541,11 @@ project(':artio-binary-entrypoint-impl') {
     }
 
     signing {
+        def signingKey = findProperty("signingKey")
+        def signingPassword = findProperty("signingPassword")
+        if (signingKey != null) {
+            useInMemoryPgpKeys(signingKey, signingPassword)
+        }
         sign publishing.publications.artioBinaryEntrypointImpl
     }
 }
@@ -575,6 +577,11 @@ project(':artio-ilink3-impl') {
     }
 
     signing {
+        def signingKey = findProperty("signingKey")
+        def signingPassword = findProperty("signingPassword")
+        if (signingKey != null) {
+            useInMemoryPgpKeys(signingKey, signingPassword)
+        }
         sign publishing.publications.artioIlink3Impl
     }
 }
@@ -641,6 +648,11 @@ project(':artio-session-codecs') {
     }
 
     signing {
+        def signingKey = findProperty("signingKey")
+        def signingPassword = findProperty("signingPassword")
+        if (signingKey != null) {
+            useInMemoryPgpKeys(signingKey, signingPassword)
+        }
         sign publishing.publications.artioSessionCodecs
     }
 }
@@ -702,6 +714,11 @@ project(':artio-session-fixt-codecs') {
     }
 
     signing {
+        def signingKey = findProperty("signingKey")
+        def signingPassword = findProperty("signingPassword")
+        if (signingKey != null) {
+            useInMemoryPgpKeys(signingKey, signingPassword)
+        }
         sign publishing.publications.artioSessionFixtCodecs
     }
 }
@@ -734,6 +751,11 @@ project(':artio-core') {
     }
 
     signing {
+        def signingKey = findProperty("signingKey")
+        def signingPassword = findProperty("signingPassword")
+        if (signingKey != null) {
+            useInMemoryPgpKeys(signingKey, signingPassword)
+        }
         sign publishing.publications.artioCore
     }
 }
@@ -795,6 +817,11 @@ project(':artio-system-tests') {
     }
 
     signing {
+        def signingKey = findProperty("signingKey")
+        def signingPassword = findProperty("signingPassword")
+        if (signingKey != null) {
+            useInMemoryPgpKeys(signingKey, signingPassword)
+        }
         sign publishing.publications.artioSystemTests
     }
 }
@@ -830,6 +857,11 @@ project(':artio-ilink-system-tests') {
     }
 
     signing {
+        def signingKey = findProperty("signingKey")
+        def signingPassword = findProperty("signingPassword")
+        if (signingKey != null) {
+            useInMemoryPgpKeys(signingKey, signingPassword)
+        }
         sign publishing.publications.artioILink3SystemTests
     }
 }
@@ -860,6 +892,11 @@ project(':artio-binary-entrypoint-system-tests') {
     }
 
     signing {
+        def signingKey = findProperty("signingKey")
+        def signingPassword = findProperty("signingPassword")
+        if (signingKey != null) {
+            useInMemoryPgpKeys(signingKey, signingPassword)
+        }
         sign publishing.publications.artioBinaryEntrypointSystemTests
     }
 }
@@ -892,6 +929,11 @@ project(':artio-samples') {
     }
 
     signing {
+        def signingKey = findProperty("signingKey")
+        def signingPassword = findProperty("signingPassword")
+        if (signingKey != null) {
+            useInMemoryPgpKeys(signingKey, signingPassword)
+        }
         sign publishing.publications.artioSamples
     }
 }
@@ -901,18 +943,18 @@ subprojects {
         repositories {
             maven {
                 name = 'oss'
-                url = !isReleaseVersion ? snapshotUrl : repoUrl
+                url = 'http://localhost:8081/artifactory/test-maven-repo/'
                 credentials {
-                    username = repoUsername
-                    password = repoPassword
+                    username = 'admin'
+                    password = 'password'
                 }
             }
             maven {
                 name = 'private'
-                url = 's3://artio-repository/releases'
-                credentials(AwsCredentials) {
-                    accessKey = awsAccessKeyId
-                    secretKey = awsSecretAccessKey
+                url = 'http://localhost:8081/artifactory/test-private-maven-repo/'
+                credentials {
+                    username = 'admin'
+                    password = 'password'
                 }
             }
         }
