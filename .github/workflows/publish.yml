@@ -29,6 +29,7 @@ concurrency:
 
 env:
   GRADLE_OPTS: '-Dorg.gradle.daemon=false -Dorg.gradle.java.installations.auto-detect=false -Dorg.gradle.warning.mode=fail'
+  INSTALL_COMPILER_RETRIES: '5'
 
 jobs:
   tag-release:
@@ -89,6 +90,9 @@ jobs:
       - name: get-cme-ilink
         if: ${{ matrix.repo == 'private' }}
         run: |
+          echo 'Acquire::Retries "${INSTALL_COMPILER_RETRIES}";' | sudo tee -a /etc/apt/apt.conf.d/99retries
+          sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu/ bionic main universe"
+          sudo apt-get update
           sudo apt-get -y install sshpass
           sshpass -p "$CME_PASSWORD" scp cmeconfig@sftpng.cmegroup.com:/MSGW/Production/Templates/ilinkbinary_v7.xml artio-ilink3-codecs/src/main/resources/uk/co/real_logic/artio/ilink/ilinkbinary.xml
         env:
