@@ -86,12 +86,14 @@ jobs:
           PASSWORD: ${{ secrets.PASSWORD }}
           ORG_GRADLE_PROJECT_signingKey: ${{ secrets.GPG_SIGNING_KEY }}
           ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.GPG_SIGNING_PASSWORD }}
-      - name: get-cme-ilink
+      - name: install-sshpass
         if: ${{ matrix.repo == 'private' }}
         run: |
           sudo apt-get update
           sudo apt-get -y install sshpass
-          sshpass -p "$CME_PASSWORD" scp cmeconfig@sftpng.cmegroup.com:/MSGW/Production/Templates/ilinkbinary_v7.xml artio-ilink3-codecs/src/main/resources/uk/co/real_logic/artio/ilink/ilinkbinary.xml
+      - name: get-cme-ilink
+        if: ${{ matrix.repo == 'private' }}
+        run: sshpass -p "$CME_PASSWORD" scp cmeconfig@sftpng.cmegroup.com:/MSGW/Production/Templates/ilinkbinary_v7.xml artio-ilink3-codecs/src/main/resources/uk/co/real_logic/artio/ilink/ilinkbinary.xml
         env:
           CME_PASSWORD: ${{ secrets.CME_PASSWORD }}
       - name: Publish with Gradle to Private Repo
